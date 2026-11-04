@@ -4,7 +4,7 @@ OpenWrt for the GL.iNet GL-SFT1200 (Opal), and the ImageBuilders built with
 it. OpenWrt 25.12.6 userland on a 6.18 kernel, `siflower/sf19a2890`, profile
 `glinet_gl-sft1200`.
 
-Made from [openwrt-device-template](https://github.com/parkeze/openwrt-device-template),
+Made from [openwrt-device-template](https://github.com/Pulzr/openwrt-device-template),
 with a different `build.sh`: see "Why not the template's build" below.
 
 ## Status
