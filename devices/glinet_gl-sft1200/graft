@@ -7,5 +7,8 @@
 # generic/files are 6.12's, and fail on 6.18: rtl8306.c calls the removed
 # phy_driver_register); and the kernel packages, which know 6.18's module
 # paths and have kmod-dsa-mxl-gsw1xx, with gpio-button-hotplug, the one kernel
-# package outside it the board needs, for its reset button.
-https://github.com/The1TrueJoe/openwrt 2a2b4ddcb2d6d0536a8072398db297db5de1f55c target/linux/siflower target/linux/generic/backport-6.18 target/linux/generic/pending-6.18 target/linux/generic/hack-6.18 target/linux/generic/config-6.18 target/linux/generic/kernel-6.18 target/linux/generic/files package/kernel/linux package/kernel/gpio-button-hotplug
+# package outside it the board needs, for its reset button; and siwifi, the
+# radios' driver and firmware, which the device recipe installs. The commit is
+# 2a2b4ddcb2 with the three Wi-Fi commits of branch siflower-siwifi on top
+# (branch siflower-gl-sft1200-wifi), whose STA and AP were run on an Opal.
+https://github.com/The1TrueJoe/openwrt 6706deda9065139ad3d7005307afec92861213a1 target/linux/siflower target/linux/generic/backport-6.18 target/linux/generic/pending-6.18 target/linux/generic/hack-6.18 target/linux/generic/config-6.18 target/linux/generic/kernel-6.18 target/linux/generic/files package/kernel/linux package/kernel/gpio-button-hotplug package/kernel/siwifi

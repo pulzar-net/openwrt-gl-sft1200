@@ -9,7 +9,8 @@ with a different `build.sh`: see "Why not the template's build" below.
 
 ## Status
 
-Not built yet, and not booted. The flash map, MACs, ports, buttons, U-Boot's
+Built and booted on the harvested unit: the switch's three ports, USB and,
+from 25.12.6-3, both radios. The flash map, MACs, ports, buttons, U-Boot's
 behaviour and both RGMII delays are from a unit harvested on GL's firmware
 4.8.3; what is marked **unverified** is not.
 
@@ -24,7 +25,7 @@ behaviour and both RGMII delays are from a unit harvested on GL's firmware
 | USB | one 2.0 host port |
 | Buttons | reset on GPIO 27, a slide switch on GPIO 1, both active low |
 | Light | an ET6326 LED driver on I2C at 0x30, not driven yet |
-| Wi-Fi | Siflower's own radios, vendor FullMAC driver only; off |
+| Wi-Fi | Siflower's own radios: 2.4 GHz 2x2 n and 5 GHz 2x2 ac, on Siflower's GPLv2 driver (`kmod-siwifi`, grafted) |
 | Serial | ttyS0, 115200 8N1, inside the case **(pads unverified)** |
 | Power | 5 V over USB-C |
 
