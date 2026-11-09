@@ -24,7 +24,7 @@ behaviour and both RGMII delays are from a unit harvested on GL's firmware
 | Ethernet | MaxLinear GSW150 switch on the GMAC's RGMII: one WAN, two LAN, gigabit |
 | USB | one 2.0 host port |
 | Buttons | reset on GPIO 27, a slide switch on GPIO 1, both active low |
-| Light | an ET6326 LED driver on I2C at 0x30, not driven yet |
+| Light | an ET6326 LED driver on I2C at 0x30, blue and white by GL's account, through `leds-ktd202x` **(unverified on a unit)** |
 | Wi-Fi | Siflower's own radios: 2.4 GHz 2x2 n and 5 GHz 2x2 ac, on Siflower's GPLv2 driver (`kmod-siwifi`, grafted) |
 | Serial | ttyS0, 115200 8N1, inside the case **(pads unverified)** |
 | Power | 5 V over USB-C |
@@ -72,6 +72,28 @@ is no DSA and no LAN, and that is how the first flash came up with no
 network. Linux has to pulse that reset itself: GL's U-Boot leaves the internal
 PHYs one MDIO address up, and without the reset wan has no PHY. With it, wan,
 lan1 and lan2 come up at 1 Gbps on a warm reboot and from a cold power-on.
+
+### The light
+
+The ET6326 has no driver in Linux. GL's own (`leds-et6326`, for the GL-MT1300)
+gives its registers, and they are the Kinetic KTD2026's, so the device tree
+names both and `leds-ktd202x` drives it. GL's driver also reads the chip with a
+NOSTART transfer, which the DesignWare controller cannot make; `leds-ktd202x`
+only writes and keeps a cache. Its blink wraps below 256 ms on a 32-bit kernel,
+which a patch fixes.
+
+**Unverified, until a unit runs this:** that the I2C controller and chip answer
+at all, that the chip accepts `leds-ktd202x`'s sleep and wake writes, and which
+channel is which colour. Blue on 0 and white on 1 are the GL-MT1300's. Channel 2
+is exposed as `et6326:channel2` only to find out what it drives. On a unit:
+
+```sh
+ls /sys/class/leds
+for l in blue:status white:status et6326:channel2; do
+  echo "$l"; echo 192 > "/sys/class/leds/$l/brightness"; sleep 3
+  echo 0 > "/sys/class/leds/$l/brightness"
+done
+```
 
 ## Why the kernel is 6.18 and the userland is 25.12.6
 

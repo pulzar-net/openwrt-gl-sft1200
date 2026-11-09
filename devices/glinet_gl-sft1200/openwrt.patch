@@ -6,6 +6,10 @@ symbol. This is OpenWrt main's include/kernel.mk as of f74bde6bb9 (from
 666fee6f48, "kernel.mk: add 6.18 workaround for empty Module.symvers.tmp"):
 the modules a package built, by modules.order, as well.
 
+The light: the ET6326 on the DesignWare I2C controller, through leds-ktd202x,
+whose registers it shares. The device tree and recipe here add both, and the
+driver's blink needs one fix on a 32-bit kernel.
+
 --- a/include/kernel.mk
 +++ b/include/kernel.mk
 @@ -154,6 +154,8 @@
@@ -17,3 +21,103 @@ the modules a package built, by modules.order, as well.
  	done; \
  	sort -u $(PKG_BUILD_DIR)/Module.symvers.tmp > $(PKG_BUILD_DIR)/Module.symvers; \
  	mkdir -p $(PKG_SYMVERS_DIR); \
+--- a/target/linux/siflower/dts/sf19a2890_glinet_gl-sft1200.dts
++++ b/target/linux/siflower/dts/sf19a2890_glinet_gl-sft1200.dts
+@@ -3,6 +3,7 @@
+ /dts-v1/;
+ 
+ #include <dt-bindings/input/input.h>
++#include <dt-bindings/leds/common.h>
+ #include "sf19a2890.dtsi"
+ 
+ / {
+@@ -133,6 +134,47 @@
+ 			switchphy2: ethernet-phy@2 {
+ 				reg = <2>;
+ 			};
++		};
++	};
++};
++
++&i2c {
++	#address-cells = <1>;
++	#size-cells = <0>;
++	status = "okay";
++
++	/*
++	 * The ET6326 has the KTD2026's registers. It is written, never read:
++	 * GL's own driver reads it with a NOSTART transfer that the DesignWare
++	 * controller cannot make, and leds-ktd202x keeps a register cache.
++	 *
++	 * GL calls the light blue and white. Channels 0 and 1 are those on its
++	 * GL-MT1300; on this board that is unverified, as is what channel 2
++	 * drives, which is here to find out.
++	 */
++	led-controller@30 {
++		compatible = "etek,et6326", "kinetic,ktd2026";
++		reg = <0x30>;
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		led@0 {
++			reg = <0>;
++			color = <LED_COLOR_ID_BLUE>;
++			function = LED_FUNCTION_STATUS;
++		};
++
++		led@1 {
++			reg = <1>;
++			color = <LED_COLOR_ID_WHITE>;
++			function = LED_FUNCTION_STATUS;
++		};
++
++		led@2 {
++			reg = <2>;
++			/* The label names it; the driver reads color regardless. */
++			color = <LED_COLOR_ID_WHITE>;
++			label = "et6326:channel2";
+ 		};
+ 	};
+ };
+--- a/target/linux/siflower/image/sf19a2890.mk
++++ b/target/linux/siflower/image/sf19a2890.mk
+@@ -20,7 +20,8 @@
+   DEVICE_DTS := sf19a2890_glinet_gl-sft1200
+   DEVICE_PACKAGES := kmod-dsa-mxl-gsw1xx kmod-phy-intel-xway \
+ 	kmod-phy-sf19a2890-usb kmod-usb-dwc2 -uboot-envtools \
+-	kmod-siwifi wpad-basic-mbedtls
++	kmod-siwifi wpad-basic-mbedtls kmod-i2c-designware-platform \
++	kmod-leds-ktd202x
+   BLOCKSIZE := 128k
+   PAGESIZE := 2048
+   # U-Boot reads only the first 3 MiB of the 4 MiB kernel partition
+--- /dev/null
++++ b/target/linux/siflower/patches-6.18/021-leds-ktd202x-a-blink-shorter-than-the-minimum-period.patch
+@@ -0,0 +1,27 @@
++From: Joseph Telaak <joseph@pulzr.net>
++Subject: [PATCH] leds: ktd202x: a blink shorter than the minimum period is the minimum
++
++The sum of delay_on and delay_off is unsigned long. Below the 256 ms minimum
++the subtraction wraps, and on a 32-bit kernel the result is a large positive
++number that clamps to the longest period, 16.4 s, so a 100/100 blink is eight
++seconds on and eight off. A 64-bit kernel happens to truncate it to a negative
++int, which clamps to the shortest, as meant.
++
++---
++--- a/drivers/leds/rgb/leds-ktd202x.c
+++++ b/drivers/leds/rgb/leds-ktd202x.c
++@@ -296,8 +296,12 @@
++ 	/* Convert into values the HW will understand. */
++ 
++ 	/* Integer representation of time of flash period */
++-	num_steps = (*delay_on + *delay_off - KTD202X_FLASH_PERIOD_MIN_MS) /
++-		    KTD202X_FLASH_PERIOD_STEP_MS;
+++	delay_total_ms = *delay_on + *delay_off;
+++	if (delay_total_ms > KTD202X_FLASH_PERIOD_MIN_MS)
+++		num_steps = (delay_total_ms - KTD202X_FLASH_PERIOD_MIN_MS) /
+++			    KTD202X_FLASH_PERIOD_STEP_MS;
+++	else
+++		num_steps = 0;
++ 	num_steps = clamp(num_steps, 0, KTD202X_FLASH_PERIOD_MAX_STEPS);
++ 
++ 	/* Integer representation of percentage of LED ON time */
