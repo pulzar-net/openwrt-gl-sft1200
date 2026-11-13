@@ -69,11 +69,9 @@ GMAC's own MDIO, and nowhere else: MANU_ID 0x1713, PNUM_ID 0x3003, MII_CFG5
 0x4044, read on the unit by bit-banging MDIO on GPIO 28 and 29. Its reset is
 GPIO 0, active low. At address 0 mxl-gsw1xx fails its probe with -ENODEV, there
 is no DSA and no LAN, and that is how the first flash came up with no
-network. GL's U-Boot resets the switch and leaves each port's internal PHY
-one MDIO address up (PHY_ADDR_N), so the device tree describes the PHYs at 1,
-2 and 3. Earlier builds pulsed the reset from Linux instead and put them at 0
-to 2; upstream review preferred describing what the bootloader leaves.
-**Unverified** on the unit with this device tree.
+network. Linux has to pulse that reset itself: GL's U-Boot leaves the internal
+PHYs one MDIO address up, and without the reset wan has no PHY. With it, wan,
+lan1 and lan2 come up at 1 Gbps on a warm reboot and from a cold power-on.
 
 ## Why the kernel is 6.18 and the userland is 25.12.6
 
