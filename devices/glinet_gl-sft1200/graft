@@ -13,5 +13,7 @@
 # for 6.12 and fail to compile on 6.18 (pre-6.14 debugfs, SOCK_ASYNC_*), which
 # the earlier releases hid behind IGNORE_ERRORS=m. The commit is
 # 2a2b4ddcb2 with the three Wi-Fi commits of branch siflower-siwifi on top
-# (branch siflower-gl-sft1200-wifi), whose STA and AP were run on an Opal.
-https://github.com/The1TrueJoe/openwrt 6706deda9065139ad3d7005307afec92861213a1 target/linux/siflower target/linux/generic/backport-6.18 target/linux/generic/pending-6.18 target/linux/generic/hack-6.18 target/linux/generic/config-6.18 target/linux/generic/kernel-6.18 target/linux/generic/files package/kernel/linux package/kernel/gpio-button-hotplug package/kernel/siwifi package/kernel/mac80211
+# (branch siflower-gl-sft1200-wifi), whose STA and AP were run on an Opal,
+# and 1c8813561b, which describes the GSW150 PHYs at the addresses GL's U-Boot
+# leaves them at (1 to 3) instead of resetting the switch from Linux.
+https://github.com/The1TrueJoe/openwrt 1c8813561bd87dd1913d8e39f44171d758b79a3c target/linux/siflower target/linux/generic/backport-6.18 target/linux/generic/pending-6.18 target/linux/generic/hack-6.18 target/linux/generic/config-6.18 target/linux/generic/kernel-6.18 target/linux/generic/files package/kernel/linux package/kernel/gpio-button-hotplug package/kernel/siwifi package/kernel/mac80211
